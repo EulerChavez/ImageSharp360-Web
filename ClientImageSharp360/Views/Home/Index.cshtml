@@ -1,0 +1,63 @@
+﻿@{
+    ViewBag.Title = "ImageSharp360";
+}
+
+@using (Html.BeginForm("ImageProcessing", "Home", FormMethod.Post, new { @enctype = "multipart/form-data", @id = "myFrom" }))
+{
+    <input type="file" accept="image/png, image/jpeg, image/gif" name="image" />
+    <button type="submit">Procesar</button>
+}
+
+@*<form id="myFrom" action="Home/ImageProcessing" method="post" enctype="multipart/form-data">
+        <input type="file" accept="image/png, image/jpeg, image/gif" name="image" />
+        <button type="submit">Procesar</button>
+    </form>*@
+
+<div class="progress" style="width:50%">
+    <div class="progress-bar"></div>
+    <div class="percent">0%</div>
+</div>
+
+<div id="status"></div>
+
+
+@section scripts {
+
+    <script src="http://malsup.github.com/jquery.form.js"></script>
+
+    <script>
+
+        function UploadFile() {
+            //we can create form by passing the form to Constructor of formData object
+            //or creating it manually using append function
+            //but please note file name should be same like the action Parameter
+            //var dataString = new FormData();
+            //dataString.append("UploadedFile", selectedFile);
+
+            var form = $('#myFrom')[0];
+            var dataString = new FormData(form);
+            $.ajax({
+                url: '/Home/ImageProcessing',  //Server script to process data
+                type: 'POST',
+                xhr: function () {  // Custom XMLHttpRequest
+                    var myXhr = $.ajaxSettings.xhr();
+                    if (myXhr.upload) { // Check if upload property exists
+                        //myXhr.upload.onprogress = progressHandlingFunction
+                        myXhr.upload.addEventListener('progress', progressHandlingFunction, false); // For handling the progress of the upload
+                    }
+                    return myXhr;
+                },
+                //Ajax events
+                //success: successHandler,
+                //error: errorHandler,
+                //complete: completeHandler,
+                // Form data
+                data: dataString,
+                //Options to tell jQuery not to process data or worry about content-type.
+                cache: false,
+                contentType: false,
+                processData: false
+            });
+        }
+    </script>
+}

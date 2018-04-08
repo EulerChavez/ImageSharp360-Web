@@ -1,0 +1,191 @@
+﻿@{
+    ViewBag.Title = "Procesamiento";
+}
+
+<br>
+<div class="container">
+    <div class="row">
+        <div class="col-3 menu-options z-depth-1">
+            <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+                <a class="nav-link active show" id="v-pills-home-tab" data-toggle="pill" href="#v-pills-home" role="tab" aria-controls="v-pills-home"
+                   aria-selected="false">Importar Imagen 360°</a>
+                <a class="nav-link" id="v-pills-profile-tab" data-toggle="pill" href="#v-pills-profile" role="tab" aria-controls="v-pills-profile"
+                   aria-selected="false">Imagen 360°</a>
+                <a class="nav-link" id="v-pills-messages-tab" data-toggle="pill" href="#v-pills-messages" role="tab" aria-controls="v-pills-messages"
+                   aria-selected="false">Imagen 360° Marcada</a>
+            </div>
+        </div>
+        <div class="col-9">
+            <div class="tab-content" id="v-pills-tabContent">
+                <div class="tab-pane fade active show" id="v-pills-home" role="tabpanel" aria-labelledby="v-pills-home-tab">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <img src="@(ViewBag.Image360Url)" id="displayImage360Selected" class="mr-3 img-thumbnail img-fluid" alt="Sin Imagen">
+                        </div>
+                        <div class="col-md-12">
+                            @using (Html.BeginForm("ProcessImage", "Home", FormMethod.Post, new { enctype = "multipart/form-data", id = "processImageForm" }))
+                            {
+                                <div style="padding-top: 15px;">
+                                    <div class="custom-file">
+                                        <input id="customFileLang1" name="image360" type="file" accept="image/jpeg" lang="es" onchange="fileChoosen_Image360(event)">
+                                        <label for="customFileLang1" class="custom-file-label">Seleccionar Imagen 360°</label>
+                                    </div>
+                                </div>
+                                <div id="nameImage360Selected" style="padding-top: 15px;">
+                                </div>
+                                <div style="padding-top: 15px;">
+                                    <div class="custom-file">
+                                        <input id="customFileLang2" name="watermark" formControlName="watermark" type="file" accept="image/png" lang="es" onchange="fileChoosen_Watermark(event)">
+                                        <label for="customFileLang2" class="custom-file-label">Seleccionar Marca de agua</label>
+                                    </div>
+                                </div>
+                                <div id="nameWatermarkSelected" style="padding-top: 15px;">
+                                </div>
+                                <div style="padding-top: 15px;">
+                                    <select class="custom-select" name="factor" formControlName="factor">
+                                        <option selected>Factor de inserción</option>
+                                        <option value="1">0.1</option>
+                                        <option value="2">0.2</option>
+                                        <option value="3">0.3</option>
+                                        <option value="4">0.4</option>
+                                        <option value="5">0.5</option>
+                                        <option value="10">1</option>
+                                    </select>
+                                </div>
+                                <div style="padding-top: 15px;">
+                                    <button id="processImage" type="submit" class="btn btn-primary">Procesar</button>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab">
+                    <iframe src="@(ViewBag.Image360Url)" id="visualizadorImagen360" width="690" height="350" allowfullscreen style="border-style:none;"></iframe>
+                </div>
+                <div class="tab-pane fade" id="v-pills-messages" role="tabpanel" aria-labelledby="v-pills-messages-tab">
+                    <iframe src="@(ViewBag.Image360MarkedUrl)" id="visualizadorImagen360Marcada" width="690" height="350" allowfullscreen style="border-style:none;"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts{
+    <script type="text/javascript">
+
+        var progress;
+        var message;
+
+        // -------------- Imagen 360 -----------------
+        var fileImage360;
+        var nameImage360Selected = 'Imagen 360 sin seleccionar';
+
+        var urlImage360Selected = '@(ViewBag.Image360Url != null ? Url.Content(ViewBag.Image360Url) : "")';
+        var trustedUrlImage360;
+        var urlImage360;
+
+        // -------------- Marca de agua --------------
+        var fileWatermark;
+        var nameWatermarkSelected = 'Marca de agua sin seleccionar';
+
+        var urlWatermarkSelected;
+        var trustedWatermark;
+        var urlWatermark;
+
+        // -------------- Imagen 360 Marcada ---------------------------
+
+        var urlImage360Marked = '@(ViewBag.Image360MarkedUrl != null ? Url.Content(ViewBag.Image360MarkedUrl) : "")'
+
+        // ------------------- DOM -------------------
+
+        var displayImage360Selected = $('#displayImage360Selected');
+        var displayNameImage360Selected = $('#nameImage360Selected');
+        var displayNameWatermarkSelected = $('#nameWatermarkSelected');
+
+        var buttonProcessImage = $('#processImage');
+
+        var visualizadorImagen360 = $('#visualizadorImagen360');
+        var visualizadorImagen360Marcada = $('#visualizadorImagen360Marcada');
+
+        $(document).ready(() => {
+
+            $('#processImage').on('click', function () {
+                var btn = $(this);
+                btn.attr('disabled', '');
+                btn.text('Procesando...');
+                btn.button('loading');
+                $("#processImageForm").submit();
+            });
+
+            displayNameImage360Selected.html(nameImage360Selected);
+            displayNameWatermarkSelected.html(nameWatermarkSelected);
+
+            displayImage360Selected.attr('src', urlImage360Selected);
+            visualizadorImagen360.attr('src', 'https://cdn.pannellum.org/2.4/pannellum.htm?panorama=' + urlImage360Selected);
+            visualizadorImagen360Marcada.attr('src', 'https://cdn.pannellum.org/2.4/pannellum.htm?panorama=' + urlImage360Marked);
+        });
+
+        function fileChoosen_Image360(event) {
+
+            fileImage360 = event.target.files[0];
+
+            if (fileImage360) {
+
+                console.log('File 360', fileImage360);
+
+                nameImage360Selected = fileImage360.name;
+                displayNameImage360Selected.html(nameImage360Selected);
+
+                const reader = new FileReader();
+
+                reader.onload = (e) => {
+
+                    urlImage360Selected = e.target.result;
+                    displayImage360Selected.attr('src', urlImage360Selected);
+
+                    console.log('Reader onLoad', e);
+                };
+
+                reader.readAsDataURL(fileImage360);
+
+            } else {
+                urlImage360Selected = null;
+                displayImage360Selected.attr('src', null);
+
+                nameImage360Selected = 'Imagen 360 sin seleccionar';
+                displayNameImage360Selected.html(nameImage360Selected);
+            }
+        }
+
+        function fileChoosen_Watermark(event) {
+
+            fileWatermark = event.target.files[0];
+
+            if (fileWatermark) {
+
+                console.log('File Watermark', fileWatermark);
+
+                nameWatermarkSelected = fileWatermark.name;
+                displayNameWatermarkSelected.html(nameWatermarkSelected);
+
+                const reader = new FileReader();
+
+                reader.onload = (e) => {
+
+                    urlWatermarkSelected = e.target.result;
+
+                    console.log('Reader onLoad', e);
+                };
+
+                reader.readAsDataURL(fileWatermark);
+
+            } else {
+                urlWatermarkSelected = null;
+
+                nameWatermarkSelected = 'Marca de agua sin seleccionar';
+                displayNameWatermarkSelected.html(nameWatermarkSelected);
+            }
+        }
+
+    </script>
+}
